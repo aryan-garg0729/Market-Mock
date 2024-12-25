@@ -10,6 +10,7 @@ const pool = require('./db/connection');
 const z = require("zod");
 const jwt = require("jsonwebtoken");
 const auth = require("./middlewares/auth");
+const WebSocket = require('ws');
 
 // Middleware
 app.use(bodyParser.json());
@@ -111,9 +112,60 @@ app.get("/profile",auth, async (req, res) => {
     }
 });
 
-
-
 // Start the server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Listening on port ${PORT}`);
 });
+
+/*  NOTES:-
+data from finnhub: {
+  "data": [
+    {
+      "p": 7296.89,
+      "s": "BINANCE:BTCUSDT",
+      "t": 1575526691134,
+      "v": 0.011467
+    }
+  ],
+  "type": "trade"
+}
+  
+stock symbols: https://finnhub.io/api/v1/stock/symbol?exchange=US&token=${process.env.FINNHUB_API_KEY}
+
+*/
+
+// WebSocket server
+const wss = new WebSocket.Server({ server });
+
+const socket = new WebSocket(`wss://ws.finnhub.io?token=${process.env.FINNHUB_API_KEY}`);
+
+// Unsubscribe function
+const unsubscribe = function(symbol) {
+    socket.send(JSON.stringify({ 'type': 'unsubscribe', 'symbol': symbol }));
+};
+
+// Connection opened -> Subscribe
+socket.addEventListener('open', function(event) {
+    socket.send(JSON.stringify({ 'type': 'subscribe', 'symbol': 'BINANCE:BTCUSDT' }));
+    socket.send(JSON.stringify({ 'type': 'subscribe', 'symbol': 'AAPL' }));
+    socket.send(JSON.stringify({ 'type': 'subscribe', 'symbol': 'GOOG' }));
+    socket.send(JSON.stringify({ 'type': 'subscribe', 'symbol': 'AMZN' }));
+});
+
+// Listen for messages
+socket.addEventListener('message', function(event) {
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(event.data);
+        }
+    });
+});
+
+// Close connection
+socket.addEventListener('close', function(event) {
+    unsubscribe('AAPL');
+    unsubscribe('GOOG');
+    unsubscribe('AMZN');
+});
+
+exports.server = server;

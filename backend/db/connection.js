@@ -1,5 +1,7 @@
 const { Pool } = require('pg');
 
+// current db: docker run --name my-postgres -d -p 5432:5432 -e POSTGRES_PASSWORD=mypassword postgres
+
 // Create a connection pool using the connection string from the environment variables
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
