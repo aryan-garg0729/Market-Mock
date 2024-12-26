@@ -1,11 +1,25 @@
-import React from 'react'
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import Markets from "../components/Markets";
+import Portfolio from "../components/Portfolio";
+import Profile from "../components/Profile";
+import Home from "../components/Home";
 
-function App() {
+const App = () => {
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <h1 className="text-4xl font-bold text-blue-600">Hello, Tailwind CSS!</h1>
-    </div>
+    <Router>
+      <Navbar />
+      <div className="bg-gray-950 min-h-screen text-white">
+          <Routes>
+            <Route path="/" element={<Home/>} />
+            <Route path="/markets" element={<Markets/>} />
+            <Route path="/portfolio" element={<Portfolio/>} />
+            <Route path="/profile" element={<Profile/>} />
+          </Routes>
+      </div>
+    </Router>
   );
-}
+};
 
 export default App;
